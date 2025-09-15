@@ -1,0 +1,30 @@
+{
+  "name": "lia_period-care-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "grok-sdk": "^0.0.1-security",
+    "groq-sdk": "^0.32.0",
+    "helmet": "^7.2.0",
+    "mongoose": "^8.18.1",
+    "morgan": "^1.10.1",
+    "openai": "^4.104.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "description": "",
+  "main": "server.js",
+  "directories": {
+    "test": "tests"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

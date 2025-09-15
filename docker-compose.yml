@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  # Base de datos MongoDB
+  mongodb:
+    image: mongo:7.0
+    container_name: period-care-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+      MONGO_INITDB_DATABASE: period_care
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./database/init-scripts:/docker-entrypoint-initdb.d
+    networks:
+      - period-care-network
+
+  # Redis para cache (opcional)
+  redis:
+    image: redis:7-alpine
+    container_name: period-care-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - period-care-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: period-care-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/period_care?authSource=admin
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - mongodb
+      - redis
+    networks:
+      - period-care-network
+    command: npm run dev
+
+  # Frontend Next.js
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: period-care-frontend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - period-care-network
+    command: npm run dev
+
+  # Servicios de IA
+  ai-services:
+    build:
+      context: ./ai-services
+      dockerfile: Dockerfile
+    container_name: period-care-ai
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      AI_PORT: 3002
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./ai-services:/app
+      - /app/node_modules
+    networks:
+      - period-care-network
+    command: npm run dev
+
+  # Nginx como reverse proxy (para producción)
+  nginx:
+    image: nginx:alpine
+    container_name: period-care-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - frontend
+      - backend
+      - ai-services
+    networks:
+      - period-care-network
+    profiles:
+      - production
+
+volumes:
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  period-care-network:
+    driver: bridge
+
+# Configuración adicional para desarrollo
+x-development: &development
+  environment:
+    - NODE_ENV=development
+  volumes:
+    - .:/app
+    - /app/node_modules

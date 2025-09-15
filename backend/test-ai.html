@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 Prueba de IA - Lia Period Care</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .input-group {
+            margin-bottom: 30px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .input-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+        }
+        
+        .btn-send {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 30px;
+        }
+        
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+        
+        .btn-send:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .response-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 100px;
+        }
+        
+        .response-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .response-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #ff6b6b;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #444;
+        }
+        
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #666;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e0e0e0;
+            border-top: 2px solid #ff6b6b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .status {
+            text-align: center;
+            padding: 15px;
+            font-size: 14px;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Prueba de IA</h1>
+            <p>Lia Period Care - Test de Endpoints</p>
+        </div>
+        
+        <div class="content">
+            <div class="input-group">
+                <label for="message">💭 Escribe tu mensaje para la IA:</label>
+                <textarea 
+                    id="message" 
+                    placeholder="Ejemplo: me siento muy triste hoy :("
+                ></textarea>
+            </div>
+            
+            <button class="btn-send" id="sendButton">
+                🚀 Enviar a la IA
+            </button>
+            
+            <div class="response-section">
+                <div class="response-title">🤖 Respuesta de la IA:</div>
+                <div class="response-content" id="response">
+                    Escribe un mensaje arriba y presiona "Enviar" para probar la IA...
+                </div>
+            </div>
+            
+            <div class="status">
+                Estado: <span id="status">Listo para probar</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const messageInput = document.getElementById('message');
+            const responseDiv = document.getElementById('response');
+            const statusDiv = document.getElementById('status');
+            const sendBtn = document.getElementById('sendButton');
+            
+            const message = messageInput.value.trim();
+            
+            if (!message) {
+                alert('Por favor escribe un mensaje');
+                return;
+            }
+            
+            // Mostrar loading
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<div class="spinner"></div> Enviando...';
+            statusDiv.textContent = 'Enviando mensaje a la IA...';
+            responseDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Procesando tu mensaje...</div>';
+            
+            try {
+                const response = await fetch('/api/test-ai', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Mostrar respuesta
+                responseDiv.innerHTML = data.response || 'No se recibió respuesta';
+                statusDiv.innerHTML = '<span style="color: green;">✅ Mensaje enviado correctamente</span>';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                responseDiv.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Error:</strong><br>
+                        ${error.message}<br><br>
+                        <strong>Posibles causas:</strong><br>
+                        • El servidor no está corriendo en puerto 3001<br>
+                        • La API key de OpenAI no está configurada<br>
+                        • Problema de conexión a internet<br>
+                        • MongoDB no está conectado
+                    </div>
+                `;
+                statusDiv.innerHTML = '<span style="color: red;">❌ Error al enviar mensaje</span>';
+            } finally {
+                // Restaurar botón
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '🚀 Enviar a la IA';
+            }
+        }
+        
+        // Configurar event listeners cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🤖 Iniciando configuración...');
+            
+            const sendButton = document.getElementById('sendButton');
+            const messageInput = document.getElementById('message');
+            
+            if (sendButton) {
+                sendButton.addEventListener('click', sendMessage);
+                console.log('✅ Event listener del botón configurado');
+            } else {
+                console.error('❌ No se encontró el botón sendButton');
+            }
+            
+            if (messageInput) {
+                messageInput.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                        sendMessage();
+                    }
+                });
+                console.log('✅ Event listener del textarea configurado');
+            } else {
+                console.error('❌ No se encontró el textarea message');
+            }
+            
+            console.log('🤖 Página de pruebas cargada');
+            console.log('💡 Presiona Ctrl+Enter para enviar rápidamente');
+        });
+    </script>
+</body>
+</html>
